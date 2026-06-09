@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Receipt Automation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 { color: #333; font-size: 24px; margin-bottom: 20px; }
+        label { font-weight: 600; color: #555; display: block; margin-bottom: 8px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-scan { background-color: #007bff; color: white; }
+        .btn-force { background-color: #dc3545; color: white; }
+        .console {
+            background-color: #1e1e1e;
+            color: #39ff14;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .loading { color: #ffcc00; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📩 Gmail Receipt Starrer Dashboard</h1>
+    
+    <label for="emailInput">Target Receiver / Sender Email:</label>
+    <input type="text" id="emailInput" placeholder="e.g., noreply@digest.groww.in" value="noreply@digest.groww.in">
+    
+    <div class="btn-group">
+        <button class="btn-scan" onclick="runAutomation(false)">🔍 Scan & Star Unread</button>
+        <button class="btn-force" onclick="runAutomation(true)">⚡ Force Star All</button>
+    </div>
+    
+    <label>Execution Output Logs:</label>
+    <div id="consoleLog" class="console">System idle. Ready to scan...</div>
+</div>
+
+<script>
+    async function runAutomation(forceStar) {
+        const emailValue = document.getElementById('emailInput').value.trim();
+        const consoleLog = document.getElementById('consoleLog');
+        
+        if (!emailValue) {
+            alert('Please enter a target email address.');
+            return;
+        }
+        
+        consoleLog.innerHTML = `<span class="loading">⏳ Running automation backend (Force Star: ${forceStar}). Please wait...</span>`;
+        
+        try {
+            const response = await fetch('/run-automation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailValue, force_star: forceStar })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                if (data.logs && data.logs.length > 0) {
+                    consoleLog.innerHTML = data.logs.join('\n');
+                } else {
+                    consoleLog.innerHTML = 'Scan finished. No logs returned.';
+                }
+            } else {
+                consoleLog.innerHTML = `❌ Error: ${data.error || 'Unknown backend failure'}`;
+            }
+        } catch (error) {
+            consoleLog.innerHTML = `❌ Network Error: Unable to reach backend server.`;
+        }
+    }
+</script>
+
+</body>
+</html>
